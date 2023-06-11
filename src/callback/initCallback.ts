@@ -4,7 +4,7 @@ import { Callback, InitOnCallOption } from "../types/Options";
 type InitCallbackArg = {
   entries: IntersectionObserverEntry[];
   forwardCallback: Callback;
-  initCall: boolean | InitOnCallOption | undefined;
+  initOption: boolean | InitOnCallOption | undefined;
   endViewPortPx?: number;
   endTargetPx?: number;
   isOnce: boolean;
@@ -19,7 +19,7 @@ export type InitCallback = (arg: InitCallbackArg) => void;
 export const initCallback = ({
   entries,
   forwardCallback,
-  initCall: initOnEnter,
+  initOption,
   endViewPortPx,
   endTargetPx,
   isOnce,
@@ -35,7 +35,7 @@ export const initCallback = ({
   }
   const rectY =
     (entries[0].rootBounds?.y ?? 0) - entries[0].boundingClientRect.y;
-  const range = checkInitOption(initOnEnter);
+  const range = checkInitOption(initOption);
 
   // 開始位置を過ぎているか
   const isOverStartLine = entries[0].rootBounds.height + rectY > 0;
@@ -80,4 +80,24 @@ const checkInitOption = (initOption: true | InitOnCallOption) => {
   } else {
     return initOption.range;
   }
+};
+
+export const generateInitCallback = ({
+  forwardCallback,
+  initOption,
+  endViewPortPx,
+  endTargetPx,
+  isOnce,
+  state,
+}: any) => {
+  return (entries: IntersectionObserverEntry[]) =>
+    initCallback({
+      entries,
+      forwardCallback,
+      initOption,
+      endViewPortPx,
+      endTargetPx,
+      isOnce,
+      state,
+    });
 };

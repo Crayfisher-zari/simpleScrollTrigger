@@ -6,9 +6,9 @@ import { InitCallback, initCallback } from "./initCallback";
 type Arg = {
   forwardCallback: Callback;
   backCallback: Callback;
+  initCallback: Callback;
   isOnce: boolean;
   initCall?: InitOnCallOption | boolean;
-  initCallback: InitCallback;
   endViewPortPx?: number;
   endTargetPx?: number;
   lastEndCalled?: "onLeave" | "onEnterBack" | null;
@@ -124,7 +124,7 @@ export class IntersectionCallback {
   #isBackCalled: boolean = false;
   #lastCalled: "forward" | "back" | null = null;
   #isOnce: boolean = false;
-  #initCallOption: InitOnCallOption | boolean | undefined = undefined;
+  #initCall: InitOnCallOption | boolean | undefined = undefined;
 
   #forwardCallback: Callback = undefined;
   #backCallback: Callback = undefined;
@@ -142,24 +142,22 @@ export class IntersectionCallback {
   }: Arg) {
     this.#forwardCallback = forwardCallback;
     this.#backCallback = backCallback;
-    this.#initCallOback = initCallback;
+    this.#initCallback = initCallback;
     this.#isOnce = isOnce;
-    this.#initCallOption = initCall;
+    this.#initCall = initCall;
     this.#state = state;
   }
 
-  initCallback(entries: IntersectionObserverEntry[]) {
-    // 設定が無効な場合はリターン
-    if (
-      !entries[0].rootBounds ||
-      !this.#forwardCallback ||
-      !this.#initCallOption
-    ) {
-      return;
-    }
-    // onEneterBackが呼ばれていたときには実行しない（リサイズ時対策）
-    if (this.#state.lastBackCallback === "onEnterBack") {
-      return;
-    }
+  callback(entries: IntersectionObserverEntry[]) {
+    // 判定範囲の矩形のy座標とトリガー要素のy座標。入った時はこの差は必ずマイナスになる。
+    const rectY =
+      (entries[0].rootBounds?.y ?? 0) - entries[0].boundingClientRect.y;
+        // 初回コールバックの処理
+  if (!this.#state.isInitCalled) {
+    this.#state.changeToInitCalled();
+    this.#initCallback()
   }
+  }
+
+
 }
