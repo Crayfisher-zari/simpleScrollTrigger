@@ -113,3 +113,37 @@ const whichCallbackEnabled = (forward: Callback, back: Callback) => {
   }
   return "nothing";
 };
+
+export class IntersectionCallback {
+  #isEntered: boolean = false;
+  #isInitCalled: boolean = false;
+  #isForwardCalled: boolean = false;
+  #isBackCalled: boolean = false;
+  #lastCalled: "forward" | "back" | null = null;
+  #isOnce: boolean = false;
+  #initCallOption: InitOnCallOption | boolean | undefined = undefined;
+
+  #forwardCallback: Callback = undefined;
+  #backCallback: Callback = undefined;
+
+  constructor({ forwardCallback, backCallback, isOnce, initCall }: Arg) {
+    this.#forwardCallback = forwardCallback;
+    this.#backCallback = backCallback;
+    this.#isOnce = isOnce;
+    this.#initCallOption = initCall;
+  }
+
+  initCallback(
+    entries: IntersectionObserverEntry[],
+    initOption: true | InitOnCallOption
+  ) {
+    // 設定が無効な場合はリターン
+    if (!entries[0].rootBounds || !this.forwardCallback || !initOnEnter) {
+      return;
+    }
+    // onEneterBackが呼ばれていたときには実行しない（リサイズ時対策）
+    if (lastEndCalled === "onEnterBack") {
+      return;
+    }
+  }
+}
