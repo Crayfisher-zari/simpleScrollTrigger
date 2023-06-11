@@ -1,15 +1,18 @@
+import { IntersectionState } from "../features/state/IntersectionState";
 import { Callback, InitOnCallOption } from "../types/Options";
 import { data } from "../utils/data";
-import { initCallback } from "./initCallback";
+import { InitCallback, initCallback } from "./initCallback";
 
 type Arg = {
   forwardCallback: Callback;
   backCallback: Callback;
   isOnce: boolean;
   initCall?: InitOnCallOption | boolean;
+  initCallback: InitCallback;
   endViewPortPx?: number;
   endTargetPx?: number;
   lastEndCalled?: "onLeave" | "onEnterBack" | null;
+  state: IntersectionState;
 };
 
 /**
@@ -125,24 +128,37 @@ export class IntersectionCallback {
 
   #forwardCallback: Callback = undefined;
   #backCallback: Callback = undefined;
+  #initCallback: InitCallback | undefined = undefined;
 
-  constructor({ forwardCallback, backCallback, isOnce, initCall }: Arg) {
+  #state: IntersectionState;
+
+  constructor({
+    forwardCallback,
+    backCallback,
+    initCallback,
+    isOnce,
+    initCall,
+    state,
+  }: Arg) {
     this.#forwardCallback = forwardCallback;
     this.#backCallback = backCallback;
+    this.#initCallOback = initCallback;
     this.#isOnce = isOnce;
     this.#initCallOption = initCall;
+    this.#state = state;
   }
 
-  initCallback(
-    entries: IntersectionObserverEntry[],
-    initOption: true | InitOnCallOption
-  ) {
+  initCallback(entries: IntersectionObserverEntry[]) {
     // 設定が無効な場合はリターン
-    if (!entries[0].rootBounds || !this.forwardCallback || !initOnEnter) {
+    if (
+      !entries[0].rootBounds ||
+      !this.#forwardCallback ||
+      !this.#initCallOption
+    ) {
       return;
     }
     // onEneterBackが呼ばれていたときには実行しない（リサイズ時対策）
-    if (lastEndCalled === "onEnterBack") {
+    if (this.#state.lastBackCallback === "onEnterBack") {
       return;
     }
   }

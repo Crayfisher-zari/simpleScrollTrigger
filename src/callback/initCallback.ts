@@ -1,18 +1,17 @@
+import { IntersectionState } from "../features/state/IntersectionState";
 import { Callback, InitOnCallOption } from "../types/Options";
-import { Data } from "../utils/data";
 
-type Arg = {
+type InitCallbackArg = {
   entries: IntersectionObserverEntry[];
   forwardCallback: Callback;
   initCall: boolean | InitOnCallOption | undefined;
   endViewPortPx?: number;
   endTargetPx?: number;
   isOnce: boolean;
-  isEntered: Data<boolean>;
-  isForwardCalled: Data<boolean>;
-  lastCalled: Data<"forward" | "back" | null>;
-  lastEndCalled?: "onLeave" | "onEnterBack" | null;
+  state: IntersectionState;
 };
+
+export type InitCallback = (arg: InitCallbackArg) => void;
 
 /**
  * 初期読み込み時のコールバック処理
@@ -24,17 +23,14 @@ export const initCallback = ({
   endViewPortPx,
   endTargetPx,
   isOnce,
-  isEntered,
-  isForwardCalled,
-  lastCalled,
-  lastEndCalled,
-}: Arg) => {
+  state,
+}: InitCallbackArg) => {
   // 設定が無効な場合はリターン
   if (!entries[0].rootBounds || !forwardCallback || !initOnEnter) {
     return;
   }
   // onEneterBackが呼ばれていたときには実行しない（リサイズ時対策）
-  if (lastEndCalled === "onEnterBack") {
+  if (state.lastBackCallback === "onEnterBack") {
     return;
   }
   const rectY =
@@ -47,11 +43,11 @@ export const initCallback = ({
   // 判定範囲が全域の場合
   if (range === "all" && isOverStartLine) {
     // 初めて入ったときに入域済みフラグをたてる
-    isEntered.value = true;
+    state.changeToEntered();
     forwardCallback();
-    lastCalled.value = "forward";
+    state.lastCalledDirection = "forward";
     if (isOnce) {
-      isForwardCalled.value = true;
+      state.changeToForwardCalled();
     }
     return;
   }
@@ -68,11 +64,11 @@ export const initCallback = ({
     if (isOverStartLine && !isOverEndLine) {
       // 開始位置を過ぎ、終了位置手前だったら実行
       // 初めて入ったときに入域済みフラグをたてる
-      isEntered.value = true;
+      state.changeToEntered();
       forwardCallback();
-      lastCalled.value = "forward";
+      state.lastCalledDirection = "forward";
       if (isOnce) {
-        isForwardCalled.value = true;
+        state.changeToForwardCalled();
       }
     }
   }
