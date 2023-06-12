@@ -1,18 +1,20 @@
+import { CheckOverLine } from "../features/checker/CheckOverLine";
+import { checkInitOption } from "../features/checker/checkInitOption";
 import { IntersectionState } from "../features/state/IntersectionState";
 import { Callback, InitOnCallOption } from "../types/Options";
 import { data } from "../utils/data";
-import { InitCallback, initCallback } from "./initCallback";
 
 type Arg = {
   forwardCallback: Callback;
   backCallback: Callback;
   initCallback: Callback;
   isOnce: boolean;
-  initCall?: InitOnCallOption | boolean;
+  initOnCallOption?: InitOnCallOption | boolean;
   endViewPortPx?: number;
   endTargetPx?: number;
   lastEndCalled?: "onLeave" | "onEnterBack" | null;
   state: IntersectionState;
+  checkOverLine: CheckOverLine;
 };
 
 /**
@@ -124,40 +126,78 @@ export class IntersectionCallback {
   #isBackCalled: boolean = false;
   #lastCalled: "forward" | "back" | null = null;
   #isOnce: boolean = false;
-  #initCall: InitOnCallOption | boolean | undefined = undefined;
+  #initOnCallOption: InitOnCallOption | boolean = false;
 
   #forwardCallback: Callback = undefined;
   #backCallback: Callback = undefined;
-  #initCallback: InitCallback | undefined = undefined;
+  #initCallback: Callback = undefined;
 
   #state: IntersectionState;
+  #checkOverLine: CheckOverLine;
 
   constructor({
     forwardCallback,
     backCallback,
     initCallback,
     isOnce,
-    initCall,
+    initOnCallOption = false,
     state,
+    checkOverLine,
   }: Arg) {
     this.#forwardCallback = forwardCallback;
     this.#backCallback = backCallback;
     this.#initCallback = initCallback;
     this.#isOnce = isOnce;
-    this.#initCall = initCall;
+    this.#initOnCallOption = initOnCallOption;
     this.#state = state;
+    this.#checkOverLine = checkOverLine;
   }
 
   callback(entries: IntersectionObserverEntry[]) {
-    // 判定範囲の矩形のy座標とトリガー要素のy座標。入った時はこの差は必ずマイナスになる。
-    const rectY =
-      (entries[0].rootBounds?.y ?? 0) - entries[0].boundingClientRect.y;
-        // 初回コールバックの処理
-  if (!this.#state.isInitCalled) {
-    this.#state.changeToInitCalled();
-    this.#initCallback()
-  }
-  }
+    // 初回コールバックの処理
+    if (
+      !this.#state.isInitCalled &&
+      this.#initOnCallOption !== false &&
+      this.#forwardCallback
+    ) {
+      // onEneterBackが呼ばれていたときには実行しない（リサイズ時対策）
+      // entries[0].rootBoundsがnullのときは実行しない（タイプガード）
+      if (
+        this.#state.lastBackCallback === "onEnterBack" ||
+        !entries[0].rootBounds
+      ) {
+        return;
+      }
+      const range = checkInitOption(this.#initOnCallOption);
 
+      // 判定範囲が全域の場合 開始位置を過ぎているか
+      if (range === "all" && this.#checkOverLine.isOverStartLine(entries)) {
+        // 初めて入ったときに入域済みフラグをたてる
+        this.#state.changeToEntered();
+        this.#forwardCallback();
+        this.#state.lastCalledDirection = "forward";
+        if (this.#isOnce) {
+          this.#state.changeToForwardCalled();
+        }
+        return;
+      }
 
+      // 判定範囲がendまでの場合 開始位置を過ぎ、終了位置手前だったら実行
+      if (
+        range === "end" &&
+        this.#checkOverLine.isOverStartLine(entries) &&
+        !this.#checkOverLine.isOverEndLine(entries)
+      ) {
+        // 初めて入ったときに入域済みフラグをたてる
+        this.#state.changeToEntered();
+        this.#forwardCallback();
+        this.#state.lastCalledDirection = "forward";
+        if (this.#isOnce) {
+          this.#state.changeToForwardCalled();
+        }
+      }
+      this.#state.changeToInitCalled();
+      return;
+    }
+  }
 }

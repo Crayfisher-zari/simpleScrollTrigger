@@ -1,4 +1,5 @@
 import { useIntersectionCallback } from "./callback/IntersectionCallback";
+import { CheckOverLine } from "./features/checker/CheckOverLine";
 import { checkEndInitOption } from "./features/checker/checkEndInitOption";
 import { convertTargetOption2Px } from "./features/converter/convertTargetOption2Px";
 import { convertViewPortOption2Px } from "./features/converter/convertViewPortOption2Px";
@@ -109,15 +110,20 @@ export class SimpleScrollTrigger {
     this.#startViewPortPx = convertViewPortOption2Px(this.#startViewPortPoint);
     this.#startTargetPx = convertTargetOption2Px(
       this.#triggerElemet,
-      this.#startTriggerPoint,
+      this.#startTriggerPoint
     );
 
     // 終点の指定
     this.#endViewPortPx = convertViewPortOption2Px(this.#endViewPortPoint);
     this.#endTargetPx = convertTargetOption2Px(
       this.#triggerElemet,
-      this.#endTriggerPoint,
+      this.#endTriggerPoint
     );
+
+    const checkOverLine = new CheckOverLine({
+      endTargetPx: this.#endTargetPx,
+      endViewPortPx: this.#endViewPortPx,
+    });
 
     // コールバックの作成
     this.#startCallbacks = useIntersectionCallback({
@@ -132,7 +138,7 @@ export class SimpleScrollTrigger {
 
     const endInitOption = checkEndInitOption(
       this.#initOnEnter,
-      this.#initOnLeave,
+      this.#initOnLeave
     );
 
     this.#endCallbacks = useIntersectionCallback({
@@ -167,7 +173,7 @@ export class SimpleScrollTrigger {
           this.#startTargetPx + this.#startViewPortPx
         )}px`,
         threshold: threshold,
-      },
+      }
     );
 
     this.#startObserver.observe(this.#triggerElemet);
@@ -202,7 +208,7 @@ export class SimpleScrollTrigger {
           this.#endViewPortPx + this.#endTargetPx
         )}px`,
         threshold: threshold,
-      },
+      }
     );
 
     this.#endObserver.observe(this.#triggerElemet);
