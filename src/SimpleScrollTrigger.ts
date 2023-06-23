@@ -1,8 +1,11 @@
-import { useIntersectionCallback } from "./callback/IntersectionCallback";
+import {
+  IntersectionCallback,
+} from "./callback/IntersectionCallback";
 import { CheckOverLine } from "./features/checker/CheckOverLine";
 import { checkEndInitOption } from "./features/checker/checkEndInitOption";
 import { convertTargetOption2Px } from "./features/converter/convertTargetOption2Px";
 import { convertViewPortOption2Px } from "./features/converter/convertViewPortOption2Px";
+import { IntersectionState } from "./features/state/IntersectionState";
 import { Callback, InitOnCallOption, Options } from "./types/Options";
 import { PointOption } from "./types/PointOption";
 
@@ -26,8 +29,8 @@ export class SimpleScrollTrigger {
   #onLeave: Callback | undefined = undefined;
   #onEnterBack: Callback | undefined = undefined;
 
-  #startCallbacks: CallBack | null = null;
-  #endCallbacks: CallBack | null = null;
+  #startCallbacks: IntersectionCallback | null = null;
+  #endCallbacks: IntersectionCallback | null = null;
 
   #startObserver: IntersectionObserver | null = null;
   #endObserver: IntersectionObserver | null = null;
@@ -48,6 +51,8 @@ export class SimpleScrollTrigger {
   // @ts-ignore 現状呼び出しはないが将来的に残しておく
   #lastStartCalled: "onEnter" | "onLeaveBack" | null = null;
   #lastEndCalled: "onLeave" | "onEnterBack" | null = null;
+
+  #state: IntersectionState = new IntersectionState();
 
   constructor({
     trigger,
@@ -126,14 +131,13 @@ export class SimpleScrollTrigger {
     });
 
     // コールバックの作成
-    this.#startCallbacks = useIntersectionCallback({
+    this.#startCallbacks = new IntersectionCallback({
       forwardCallback: this.#onEnter,
       backCallback: this.#onLeaveBack,
       isOnce: this.#isOnce,
-      initCall: this.#initOnEnter,
-      endTargetPx: this.#endTargetPx,
-      endViewPortPx: this.#endViewPortPx,
-      lastEndCalled: this.#lastEndCalled,
+      initOnCallOption: this.#initOnEnter,
+      checkOverLine: checkOverLine,
+      state: this.#state,
     });
 
     const endInitOption = checkEndInitOption(
@@ -141,11 +145,12 @@ export class SimpleScrollTrigger {
       this.#initOnLeave
     );
 
-    this.#endCallbacks = useIntersectionCallback({
+    this.#endCallbacks = new IntersectionCallback({
       forwardCallback: this.#onLeave,
       backCallback: this.#onEnterBack,
       isOnce: this.#isOnce,
-      initCall: endInitOption,
+      initOnCallOption: endInitOption,
+      state: this.#state,
     });
     // 閾値の配列作成
     const threshold = [0, 1];
@@ -156,12 +161,12 @@ export class SimpleScrollTrigger {
           return;
         }
         this.#startCallbacks.callback(entries);
-        if (this.#startCallbacks.getLastCalled() === "forward") {
-          this.#lastStartCalled = "onEnter";
-        } else if (this.#startCallbacks.getLastCalled() === "back") {
-          this.#lastStartCalled = "onLeaveBack";
+        if (this.#state.lastCalledDirection === "forward") {
+          this.#state.lastForwardCallback = "onEnter";
+        } else if (this.#state.lastCalledDirection === "back") {
+          this.#state.lastForwardCallback = "onLeaveBack";
         } else {
-          this.#lastStartCalled = null;
+          this.#state.lastForwardCallback = null;
         }
         // onceフラグがあり、すべてのコールバックが呼ばれたら監視を停止する
         if (this.#isOnce && this.#startCallbacks.isAllCalled()) {
@@ -190,12 +195,12 @@ export class SimpleScrollTrigger {
           return;
         }
         this.#endCallbacks.callback(entries);
-        if (this.#endCallbacks.getLastCalled() === "forward") {
-          this.#lastEndCalled = "onLeave";
-        } else if (this.#endCallbacks.getLastCalled() === "back") {
-          this.#lastEndCalled = "onEnterBack";
+        if (this.#state.lastCalledDirection === "forward") {
+          this.#state.lastBackCallback = "onLeave";
+        } else if (this.#state.lastCalledDirection === "back") {
+          this.#state.lastBackCallback = "onEnterBack";
         } else {
-          this.#lastEndCalled = null;
+          this.#state.lastBackCallback = null;
         }
 
         // onceフラグがあり、すべてのコールバックが呼ばれたら監視を停止する

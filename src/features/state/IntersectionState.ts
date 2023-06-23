@@ -10,6 +10,8 @@ export class IntersectionState {
   /** 最後に呼ばれたコールバックの向き */
   #lastCalledDirection: "forward" | "back" | null = null;
   /** 最後に呼ばれた後方コールバック */
+  #lastForwardCalled: "onEnter" | "onLeaveBack" | null = null;
+  /** 最後に呼ばれた後方コールバック */
   #lastBackCalled: "onLeave" | "onEnterBack" | null = null;
 
   get isEntered(): boolean {
@@ -51,6 +53,16 @@ export class IntersectionState {
   set lastCalledDirection(last) {
     if (last) {
       this.#lastCalledDirection = last;
+    }
+  }
+
+  get lastForwardCallback() {
+    return this.#lastForwardCalled;
+  }
+
+  set lastForwardCallback(forward) {
+    if (forward) {
+      this.#lastForwardCalled = forward;
     }
   }
 

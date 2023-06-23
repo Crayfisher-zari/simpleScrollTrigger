@@ -2,108 +2,16 @@ import { CheckOverLine } from "../features/checker/CheckOverLine";
 import { checkInitOption } from "../features/checker/checkInitOption";
 import { IntersectionState } from "../features/state/IntersectionState";
 import { Callback, InitOnCallOption } from "../types/Options";
-import { data } from "../utils/data";
 
 type Arg = {
   forwardCallback: Callback;
   backCallback: Callback;
-  initCallback: Callback;
   isOnce: boolean;
   initOnCallOption?: InitOnCallOption | boolean;
   endViewPortPx?: number;
   endTargetPx?: number;
-  lastEndCalled?: "onLeave" | "onEnterBack" | null;
   state: IntersectionState;
-  checkOverLine: CheckOverLine;
-};
-
-/**
- * Intersection Observerのコールバック関数を作成します
- */
-export const useIntersectionCallback = ({
-  forwardCallback,
-  backCallback,
-  isOnce,
-  initCall,
-  endViewPortPx,
-  endTargetPx,
-  lastEndCalled,
-}: Arg) => {
-  const isEntered = data<boolean>(false);
-  const isForwardCalled = data<boolean>(false);
-  const lastCalled = data<"forward" | "back" | null>(null);
-  let isBackCalled = false;
-  let isInitCalled = false;
-
-  const callback = (entries: IntersectionObserverEntry[]) => {
-    // 判定範囲の矩形のy座標とトリガー要素のy座標。入った時はこの差は必ずマイナスになる。
-    const rectY =
-      (entries[0].rootBounds?.y ?? 0) - entries[0].boundingClientRect.y;
-    // 初回コールバックの処理
-    if (!isInitCalled) {
-      isInitCalled = true;
-      initCallback({
-        entries,
-        forwardCallback,
-        initCall,
-        endViewPortPx,
-        endTargetPx,
-        isOnce,
-        isEntered,
-        isForwardCalled,
-        lastCalled,
-        lastEndCalled,
-      });
-      return;
-    }
-    if (!isForwardCalled.value && forwardCallback) {
-      // 交差判定があり、y座標の差がマイナスの時は入ったときのコールバックを呼ぶ
-      if (entries[0].isIntersecting && rectY < 0) {
-        // 初めて入ったときに入域済みフラグをたてる
-        if (isEntered.value === false) {
-          isEntered.value = true;
-        }
-        // isOnceが有効な場合に呼ばれたらフラグを建てる
-        if (isOnce) {
-          isForwardCalled.value = true;
-        }
-
-        forwardCallback();
-        lastCalled.value = "forward";
-      }
-    }
-    if (!isBackCalled && backCallback) {
-      // 交差判定がなく、y座標の差がマイナスの時は入ったとき、さらにforward関数がある場合は入域済みフラグがある時に出ていったときのコールバックを呼ぶ
-      if (
-        !entries[0].isIntersecting &&
-        rectY < 0 &&
-        ((forwardCallback && isEntered.value) || !forwardCallback)
-      ) {
-        // isOnceが有効な場合に呼ばれたらフラグを建てる
-        if (isOnce) {
-          isBackCalled = true;
-        }
-        backCallback();
-        lastCalled.value = "back";
-      }
-    }
-  };
-
-  const isAllCalled = () => {
-    if (whichCallbackEnabled(forwardCallback, backCallback) === "forward") {
-      return Boolean(isForwardCalled.value);
-    }
-    if (whichCallbackEnabled(forwardCallback, backCallback) === "back") {
-      return Boolean(isBackCalled);
-    }
-    if (whichCallbackEnabled(forwardCallback, backCallback) === "both") {
-      return Boolean(isForwardCalled.value && isBackCalled);
-    }
-    return false;
-  };
-
-  const getLastCalled = () => lastCalled.value;
-  return { callback, isAllCalled, getLastCalled };
+  checkOverLine?: CheckOverLine;
 };
 
 const whichCallbackEnabled = (forward: Callback, back: Callback) => {
@@ -119,26 +27,22 @@ const whichCallbackEnabled = (forward: Callback, back: Callback) => {
   return "nothing";
 };
 
+/**
+ * Intersection Observerのコールバック関数を作成します
+ */
 export class IntersectionCallback {
-  #isEntered: boolean = false;
-  #isInitCalled: boolean = false;
-  #isForwardCalled: boolean = false;
-  #isBackCalled: boolean = false;
-  #lastCalled: "forward" | "back" | null = null;
-  #isOnce: boolean = false;
+  #isOnce = false;
   #initOnCallOption: InitOnCallOption | boolean = false;
 
   #forwardCallback: Callback = undefined;
   #backCallback: Callback = undefined;
-  #initCallback: Callback = undefined;
 
   #state: IntersectionState;
-  #checkOverLine: CheckOverLine;
+  #checkOverLine: CheckOverLine | undefined = undefined;
 
   constructor({
     forwardCallback,
     backCallback,
-    initCallback,
     isOnce,
     initOnCallOption = false,
     state,
@@ -146,7 +50,6 @@ export class IntersectionCallback {
   }: Arg) {
     this.#forwardCallback = forwardCallback;
     this.#backCallback = backCallback;
-    this.#initCallback = initCallback;
     this.#isOnce = isOnce;
     this.#initOnCallOption = initOnCallOption;
     this.#state = state;
@@ -154,6 +57,15 @@ export class IntersectionCallback {
   }
 
   callback(entries: IntersectionObserverEntry[]) {
+    // 判定範囲の矩形のy座標とトリガー要素のy座標。入った時はこの差は必ずマイナスになる。
+    const rectY =
+      (entries[0].rootBounds?.y ?? 0) - entries[0].boundingClientRect.y;
+    console.log(
+      "init",
+      this.#state.isInitCalled,
+      this.#initOnCallOption,
+      this.#checkOverLine?.isOverStartLine(entries)
+    );
     // 初回コールバックの処理
     if (
       !this.#state.isInitCalled &&
@@ -162,12 +74,15 @@ export class IntersectionCallback {
     ) {
       // onEneterBackが呼ばれていたときには実行しない（リサイズ時対策）
       // entries[0].rootBoundsがnullのときは実行しない（タイプガード）
+      // this.#checkOverLineが無効のときは実行しない（endの方）
       if (
         this.#state.lastBackCallback === "onEnterBack" ||
-        !entries[0].rootBounds
+        !entries[0].rootBounds ||
+        !this.#checkOverLine
       ) {
         return;
       }
+      console.log("inn")
       const range = checkInitOption(this.#initOnCallOption);
 
       // 判定範囲が全域の場合 開始位置を過ぎているか
@@ -199,5 +114,61 @@ export class IntersectionCallback {
       this.#state.changeToInitCalled();
       return;
     }
+
+    // 前方方向のコールバック
+    if (!this.#state.isForwardCalled && this.#forwardCallback) {
+      // 交差判定があり、y座標の差がマイナスの時は入ったときのコールバックを呼ぶ
+      if (entries[0].isIntersecting && rectY < 0) {
+        // 初めて入ったときに入域済みフラグをたてる
+        if (this.#state.isEntered === false) {
+          this.#state.changeToEntered();
+        }
+        // isOnceが有効な場合に呼ばれたらフラグを建てる
+        if (this.#isOnce) {
+          this.#state.changeToForwardCalled();
+        }
+
+        this.#forwardCallback();
+        this.#state.lastCalledDirection = "forward";
+      }
+    }
+
+    // 後方方向のコールバック
+    if (!this.#state.isBackCalled && this.#backCallback) {
+      // 交差判定がなく、y座標の差がマイナスの時は入ったとき、さらにforward関数がある場合は入域済みフラグがある時に出ていったときのコールバックを呼ぶ
+      if (
+        !entries[0].isIntersecting &&
+        rectY < 0 &&
+        ((this.#forwardCallback && this.#state.isEntered) ||
+          !this.#forwardCallback)
+      ) {
+        // isOnceが有効な場合に呼ばれたらフラグを建てる
+        if (this.#isOnce) {
+          this.#state.changeToBackCalled();
+        }
+        this.#backCallback();
+        this.#state.lastCalledDirection = "back";
+      }
+    }
+  }
+
+  isAllCalled() {
+    if (
+      whichCallbackEnabled(this.#forwardCallback, this.#backCallback) ===
+      "forward"
+    ) {
+      return Boolean(this.#state.isForwardCalled);
+    }
+    if (
+      whichCallbackEnabled(this.#forwardCallback, this.#backCallback) === "back"
+    ) {
+      return Boolean(this.#state.isBackCalled);
+    }
+    if (
+      whichCallbackEnabled(this.#forwardCallback, this.#backCallback) === "both"
+    ) {
+      return Boolean(this.#state.isForwardCalled && this.#state.isBackCalled);
+    }
+    return false;
   }
 }
