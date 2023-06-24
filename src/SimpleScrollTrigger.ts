@@ -1,6 +1,4 @@
-import {
-  IntersectionCallback,
-} from "./callback/IntersectionCallback";
+import { IntersectionCallback } from "./callback/IntersectionCallback";
 import { CheckOverLine } from "./features/checker/CheckOverLine";
 import { checkEndInitOption } from "./features/checker/checkEndInitOption";
 import { convertTargetOption2Px } from "./features/converter/convertTargetOption2Px";
@@ -8,12 +6,6 @@ import { convertViewPortOption2Px } from "./features/converter/convertViewPortOp
 import { IntersectionState } from "./features/state/IntersectionState";
 import { Callback, InitOnCallOption, Options } from "./types/Options";
 import { PointOption } from "./types/PointOption";
-
-type CallBack = {
-  callback: (entries: IntersectionObserverEntry[]) => void;
-  isAllCalled: () => boolean;
-  getLastCalled: () => "forward" | "back" | null;
-};
 
 export class SimpleScrollTrigger {
   #triggerElemet: Element | null = null;
@@ -136,7 +128,7 @@ export class SimpleScrollTrigger {
       backCallback: this.#onLeaveBack,
       isOnce: this.#isOnce,
       initOnCallOption: this.#initOnEnter,
-      checkOverLine: checkOverLine,
+      checkOverLine,
       state: this.#state,
     });
 
@@ -150,6 +142,7 @@ export class SimpleScrollTrigger {
       backCallback: this.#onEnterBack,
       isOnce: this.#isOnce,
       initOnCallOption: endInitOption,
+      checkOverLine,
       state: this.#state,
     });
     // 閾値の配列作成
