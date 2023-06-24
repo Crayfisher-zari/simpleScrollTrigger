@@ -1,8 +1,6 @@
 export class IntersectionState {
   /** 交差判定範囲に入ったか */
   #isEntered: boolean = false;
-  /** 読み込み時の初回処理が呼ばれたか */
-  #isInitCalled: boolean = false;
   /** 前方コールバックが呼ばれたか */
   #isForwardCalled: boolean = false;
   /** 後方コールバックが呼ばれたか */
@@ -20,14 +18,6 @@ export class IntersectionState {
 
   changeToEntered() {
     this.#isEntered = true;
-  }
-
-  get isInitCalled(): boolean {
-    return this.#isInitCalled;
-  }
-
-  changeToInitCalled() {
-    this.#isInitCalled = true;
   }
 
   get isForwardCalled(): boolean {

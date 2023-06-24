@@ -39,7 +39,7 @@ export class IntersectionCallback {
 
   #state: IntersectionState;
   #checkOverLine: CheckOverLine | undefined = undefined;
-
+  #isInitCalled: boolean = false;
   constructor({
     forwardCallback,
     backCallback,
@@ -60,29 +60,21 @@ export class IntersectionCallback {
     // 判定範囲の矩形のy座標とトリガー要素のy座標。入った時はこの差は必ずマイナスになる。
     const rectY =
       (entries[0].rootBounds?.y ?? 0) - entries[0].boundingClientRect.y;
-    console.log(
-      "init",
-      this.#state.isInitCalled,
-      this.#initOnCallOption,
-      this.#checkOverLine?.isOverStartLine(entries)
-    );
     // 初回コールバックの処理
-    if (
-      !this.#state.isInitCalled &&
-      this.#initOnCallOption !== false &&
-      this.#forwardCallback
-    ) {
+    if (!this.#isInitCalled && this.#forwardCallback) {
+      this.#isInitCalled = true;
       // onEneterBackが呼ばれていたときには実行しない（リサイズ時対策）
       // entries[0].rootBoundsがnullのときは実行しない（タイプガード）
       // this.#checkOverLineが無効のときは実行しない（endの方）
+      // initOnCallOptionが無効な場合は実行しない
       if (
         this.#state.lastBackCallback === "onEnterBack" ||
         !entries[0].rootBounds ||
-        !this.#checkOverLine
+        !this.#checkOverLine ||
+        this.#initOnCallOption === false
       ) {
         return;
       }
-      console.log("inn")
       const range = checkInitOption(this.#initOnCallOption);
 
       // 判定範囲が全域の場合 開始位置を過ぎているか
@@ -111,7 +103,6 @@ export class IntersectionCallback {
           this.#state.changeToForwardCalled();
         }
       }
-      this.#state.changeToInitCalled();
       return;
     }
 
