@@ -39,7 +39,7 @@ export class IntersectionCallback {
 
   #state: IntersectionState;
   #checkOverLine: CheckOverLine | undefined = undefined;
-  #isInitCalled: boolean = false;
+  #isInitCalled = false;
   constructor({
     forwardCallback,
     backCallback,
