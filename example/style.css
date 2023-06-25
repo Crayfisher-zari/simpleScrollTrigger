@@ -92,9 +92,12 @@ html {
 
 #middle {
   position: absolute;
+  width: 100%;
   top: 300px;
+  border-top: 1px solid purple;
 }
 
 #end {
   margin-top: 300px;
+  border-top: 1px solid blue;
 }

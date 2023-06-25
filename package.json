@@ -34,7 +34,8 @@
     "build:doc": "tsc && vite build --mode=doc",
     "preview": "vite preview",
     "format": "eslint src/**/*.ts --fix && prettier src/**/*.ts --write",
-    "test": "playwright test && playwright show-report"
+    "test": "playwright test",
+    "report test": "playwright show-report"
   },
   "devDependencies": {
     "@playwright/test": "1.35.1",
