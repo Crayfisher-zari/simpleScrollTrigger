@@ -33,9 +33,11 @@
     "build": "tsc && vite build",
     "build:doc": "tsc && vite build --mode=doc",
     "preview": "vite preview",
-    "format": "eslint src/**/*.ts --fix && prettier src/**/*.ts --write"
+    "format": "eslint src/**/*.ts --fix && prettier src/**/*.ts --write",
+    "test": "playwright test && playwright show-report"
   },
   "devDependencies": {
+    "@playwright/test": "1.35.1",
     "@types/node": "18.11.17",
     "@typescript-eslint/eslint-plugin": "5.46.1",
     "@typescript-eslint/parser": "5.46.1",
