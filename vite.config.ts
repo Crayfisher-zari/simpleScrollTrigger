@@ -20,4 +20,7 @@ export default defineConfig(({ command, mode, ssrBuild }) => ({
           },
         },
   base: "/simpleScrollTrigger",
+  server: {
+    port: 3333,
+  },
 }));
