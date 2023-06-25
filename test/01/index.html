@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/example/style.css" />
+    <title>Simple ScrollTrigger</title>
+  </head>
+  <body>
+    <p class="scroll">Scroll　↓</p>
+    <div class="callback">callback: <span class="callbackText">---</span></div>
+    <div class="spacer"></div>
+    <div class="trigger"></div>
+    <div class="spacer"></div>
+    <p class="note">※マーカー機能はついていません</p>
+    <div class="startViewportMarker viewportMarker">viewport start</div>
+    <div class="endViewportMarker viewportMarker">viewport end</div>
+    <div class="startTriggerMarker triggerMarker">trigger start</div>
+    <div class="endTriggerMarker triggerMarker">trigger end</div>
+    <script type="module">
+      import { SimpleScrollTrigger } from "/src/SimpleScrollTrigger";
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const triggerElement = document.querySelector(".trigger");
+
+        const textElement = document.querySelector(".callbackText");
+        if (!textElement) {
+          return;
+        }
+        new SimpleScrollTrigger({
+          trigger: triggerElement,
+          onEnter: () => {
+            console.log("onEnter");
+            textElement.textContent = "onEnter";
+          },
+          onLeaveBack: () => {
+            console.log("onLeaveBack");
+            textElement.textContent = "onLeaveBack";
+          },
+          onLeave: () => {
+            console.log("onLeave");
+            textElement.textContent = "onLeave";
+          },
+          onEnterBack: () => {
+            console.log("onEnterBack");
+            textElement.textContent = "onEnterBack";
+          },
+          startViewPortPoint: { value: 10, unit: "%", from: "bottom" },
+          startTriggerPoint: { value: 800, unit: "px", from: "bottom" },
+          endViewPortPoint: { value: 50, unit: "%", from: "top" },
+          endTriggerPoint: { value: 90, unit: "%" },
+          once: false,
+        });
+      });
+    </script>
+  </body>
+</html>

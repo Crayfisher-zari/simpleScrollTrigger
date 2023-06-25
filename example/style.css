@@ -22,7 +22,7 @@ html {
   height: 800px;
 }
 
-.callback{
+.callback {
   position: fixed;
   bottom: 48px;
   left: 16px;
@@ -30,7 +30,7 @@ html {
   z-index: 999;
 }
 
-.callbackText{
+.callbackText {
   font-size: 48px;
 }
 
@@ -88,4 +88,13 @@ html {
 .endTriggerMarker {
   color: red;
   top: 1700px;
+}
+
+#middle {
+  position: absolute;
+  top: 300px;
+}
+
+#end {
+  margin-top: 300px;
 }
