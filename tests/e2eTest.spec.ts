@@ -1,242 +1,331 @@
 import { test, expect } from "@playwright/test";
 
-let index = 0
+const scrollTo = (node: HTMLElement) => {
+  node.scrollIntoView({ block: "center", behavior: "smooth" });
+};
 
-// test("Callback Test (not once)", async ({ page }) => {
-//   await page.goto("http://localhost:3333/simpleScrollTrigger/tests/01/");
+const scrollTop = () => {
+  window.scrollTo(0, 0);
+};
 
-//   const locator = page.locator(".callbackText");
-//   await expect(locator).toContainText("---");
+test("Callback Test (not once)", async ({ page }) => {
+  await page.goto("http://localhost:3333/simpleScrollTrigger/tests/01/");
 
-//   const elementMiddleHandle = await page.$("#middle");
-//   const elementEndHandle = await page.$("#end");
-//   const elementStartHandle = await page.$(".scroll");
+  const locator = page.locator(".callbackText");
+  await expect(locator).toContainText("---");
 
-//   if (!elementMiddleHandle || !elementEndHandle || !elementStartHandle) {
-//     throw new Error("Element is Null");
-//   }
+  const locatorMiddle = page.locator("#middle");
+  const locatorEnd = page.locator("#end");
+  const locatorStart = page.locator(".scroll");
 
-//   // 真ん中までいったらonEnter
-//   await elementMiddleHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onEnter");
+  // 真ん中までいったらonEnter
+  await locatorMiddle.evaluate(scrollTo);
 
-//   // 通り過ぎたらonLeave
-//   await elementEndHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onLeave");
+  await expect(locator).toContainText("onEnter");
 
-//   // 戻ってきたらonEnterBack
-//   await elementMiddleHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onEnterBack");
+  // 通り過ぎたらonLeave
+  await locatorEnd.evaluate(scrollTo);
+  await expect(locator).toContainText("onLeave");
 
-//   // 戻り去ったらonLeaveBack
-//   await elementStartHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onLeaveBack");
-// });
+  // 戻ってきたらonEnterBack
+  await locatorMiddle.evaluate(scrollTo);
+  await expect(locator).toContainText("onEnterBack");
 
-// test("Callback Test (once)", async ({ page }) => {
-//   await page.goto("http://localhost:3333/simpleScrollTrigger/tests/02/");
+  // 戻り去ったらonLeaveBack
+  await locatorStart.evaluate(scrollTop);
 
-//   const locator = page.locator(".callbackText");
+  await expect(locator).toContainText("onLeaveBack");
+});
 
-//   const elementMiddleHandle = await page.$("#middle");
-//   const elementEndHandle = await page.$("#end");
-//   const elementStartHandle = await page.$(".scroll");
+test("Callback Test (once)", async ({ page }) => {
+  await page.goto("http://localhost:3333/simpleScrollTrigger/tests/02/");
 
-//   if (!elementMiddleHandle || !elementEndHandle || !elementStartHandle) {
-//     throw new Error("Element is Null");
-//   }
+  const locator = page.locator(".callbackText");
 
-//   // ページ下までいって戻ってくる
-//   await elementMiddleHandle.scrollIntoViewIfNeeded();
-//   await elementEndHandle.scrollIntoViewIfNeeded();
-//   await elementMiddleHandle.scrollIntoViewIfNeeded();
-//   await elementStartHandle.scrollIntoViewIfNeeded();
+  const locatorMiddle = page.locator("#middle");
+  const locatorEnd = page.locator("#end");
+  const locatorStart = page.locator(".scroll");
 
-//   // 戻ってきたら真ん中まで移動
-//   // 変わらず"onLeaveBack"のままが期待値
-//   await elementMiddleHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onLeaveBack");
+  // ページ下までいって戻ってくる
+  await locatorEnd.evaluate(scrollTo);
+  await locatorStart.evaluate(scrollTop);
 
-//   await elementEndHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onLeaveBack");
 
-//   await elementMiddleHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onLeaveBack");
+  // 戻ってきたら真ん中まで移動
+  // 変わらず"onLeaveBack"のままが期待値
+  await locatorMiddle.evaluate(scrollTo);
+  await expect(locator).toContainText("onLeaveBack");
 
-//   await elementStartHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onLeaveBack");
-// });
+  await locatorEnd.evaluate(scrollTo);
+  await expect(locator).toContainText("onLeaveBack");
 
-// test("Initial OnEnter Callback Test (all range start not once)", async ({
-//   page,
-// }) => {
-//   await page.goto("http://localhost:3333/simpleScrollTrigger/tests/03/#middle");
+  await locatorMiddle.evaluate(scrollTo);
+  await expect(locator).toContainText("onLeaveBack");
 
-//   const locator = page.locator(".callbackText");
+  await locatorStart.evaluate(scrollTop);
 
-//   const elementMiddleHandle = await page.$("#middle");
-//   const elementEndHandle = await page.$("#end");
-//   const elementStartHandle = await page.$(".scroll");
+  await expect(locator).toContainText("onLeaveBack");
+});
 
-//   if (!elementMiddleHandle || !elementEndHandle || !elementStartHandle) {
-//     throw new Error("Element is Null");
-//   }
+test("Initial OnEnter Callback Test (all range at middle, not once)", async ({
+  page,
+}) => {
+  await page.goto("http://localhost:3333/simpleScrollTrigger/tests/03/#middle");
 
-//   await page.waitForTimeout(500);
+  const locator = page.locator(".callbackText");
 
-//   await expect(locator).toContainText("onEnter");
+  const locatorMiddle = page.locator("#middle");
+  const locatorEnd = page.locator("#end");
+  const locatorStart = page.locator(".scroll");
 
-//   await elementEndHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onLeave");
+  await page.waitForTimeout(200);
 
-//   await elementMiddleHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onEnterBack");
+  await expect(locator).toContainText("onEnter");
 
-//   await elementStartHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onLeaveBack");
-// });
+  await locatorEnd.evaluate(scrollTo);
+  await expect(locator).toContainText("onLeave");
 
-test("Initial OnEnter Callback Test (all range end)", async ({ page }) => {
-  index++;
+  await locatorMiddle.evaluate(scrollTo);
+  await expect(locator).toContainText("onEnterBack");
+
+  await locatorStart.evaluate(scrollTop);
+
+  await expect(locator).toContainText("onLeaveBack");
+});
+
+test("Initial OnEnter Callback Test (all range at end, not once)", async ({
+  page,
+}) => {
   await page.goto("http://localhost:3333/simpleScrollTrigger/tests/03/#end");
 
   const locator = page.locator(".callbackText");
 
-  const elementMiddleHandle = await page.$("#middle");
-  const elementEndHandle = await page.$("#end");
-  const elementStartHandle = await page.$(".scroll");
+  const locatorMiddle = page.locator("#middle");
+  const locatorEnd = page.locator("#end");
+  const locatorStart = page.locator(".scroll");
 
-  if (!elementMiddleHandle || !elementEndHandle || !elementStartHandle) {
-    throw new Error("Element is Null");
-  }
-
-
-  await page.screenshot({path: `screenshot0.png`});
-
-
+  // all rangeなら#endの場所でもonEnterが期待値
   await expect(locator).toContainText("onEnter");
 
-  // await elementMiddleHandle.scrollIntoViewIfNeeded();
-  await page.mouse.wheel(0, -2400)
-  await page.waitForTimeout(100);
-  await page.screenshot({path: `screenshot.png`});
-
+  await locatorMiddle.evaluate(scrollTo);
   await expect(locator).toContainText("onEnterBack");
 
-  await elementStartHandle.scrollIntoViewIfNeeded();
+  await locatorStart.evaluate(scrollTop);
+
   await expect(locator).toContainText("onLeaveBack");
 });
 
-// test("Initial OnEnter Callback Test (all range start once)", async ({
-//   page,
-// }) => {
-//   await page.goto("http://localhost:3333/simpleScrollTrigger/tests/04/#middle");
+test("Initial OnEnter Callback Test (all range at middle, once)", async ({
+  page,
+}) => {
+  await page.goto("http://localhost:3333/simpleScrollTrigger/tests/04/#middle");
 
-//   const locator = page.locator(".callbackText");
+  const locator = page.locator(".callbackText");
 
-//   const elementMiddleHandle = await page.$("#middle");
-//   const elementEndHandle = await page.$("#end");
-//   const elementStartHandle = await page.$(".scroll");
+  const locatorMiddle = page.locator("#middle");
+  const locatorEnd = page.locator("#end");
+  const locatorStart = page.locator(".scroll");
 
-//   if (!elementMiddleHandle || !elementEndHandle || !elementStartHandle) {
-//     throw new Error("Element is Null");
-//   }
+  await page.waitForTimeout(200);
+  await expect(locator).toContainText("onEnter");
 
-//   await page.waitForTimeout(500);
-//   await expect(locator).toContainText("onEnter");
+  await locatorEnd.evaluate(scrollTo);
+  await expect(locator).toContainText("onLeave");
 
-//   await elementEndHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onLeave");
+  await locatorMiddle.evaluate(scrollTo);
+  await expect(locator).toContainText("onEnterBack");
 
-//   await elementMiddleHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onEnterBack");
+  await locatorStart.evaluate(scrollTop);
 
-//   await elementStartHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onLeaveBack");
+  await expect(locator).toContainText("onLeaveBack");
 
-//   // 戻ってもonLeaveBackのまま
-//   await elementMiddleHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onLeaveBack");
-// });
+  // 戻ってもonLeaveBackのまま
+  await locatorMiddle.evaluate(scrollTo);
+  await expect(locator).toContainText("onLeaveBack");
+});
 
-// test("Initial OnEnter Callback Test (all range end once)", async ({ page }) => {
-//   await page.goto("http://localhost:3333/simpleScrollTrigger/tests/04/#end");
+test("Initial OnEnter Callback Test (all range at end, once)", async ({
+  page,
+}) => {
+  await page.goto("http://localhost:3333/simpleScrollTrigger/tests/04/#end");
 
-//   const locator = page.locator(".callbackText");
+  const locator = page.locator(".callbackText");
 
-//   const elementMiddleHandle = await page.$("#middle");
-//   const elementEndHandle = await page.$("#end");
-//   const elementStartHandle = await page.$(".scroll");
+  const locatorMiddle = page.locator("#middle");
+  const locatorEnd = page.locator("#end");
+  const locatorStart = page.locator(".scroll");
 
-//   if (!elementMiddleHandle || !elementEndHandle || !elementStartHandle) {
-//     throw new Error("Element is Null");
-//   }
+  await page.waitForTimeout(200);
+  await expect(locator).toContainText("onEnter");
 
-//   await page.waitForTimeout(500);
-//   await expect(locator).toContainText("onEnter");
+  await locatorMiddle.evaluate(scrollTo);
+  await expect(locator).toContainText("onEnterBack");
 
-//   await elementMiddleHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onEnterBack");
+  await locatorStart.evaluate(scrollTop);
 
-//   await elementStartHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onLeaveBack");
+  await expect(locator).toContainText("onLeaveBack");
 
-//   // 戻ってもonLeaveBackのまま
-//   await elementMiddleHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onLeaveBack");
-// });
+  // 戻ってもonLeaveBackのまま
+  await locatorMiddle.evaluate(scrollTo);
+  await expect(locator).toContainText("onLeaveBack");
+});
 
-// test("Initial OnLeave Callback Test (all range not once)", async ({ page }) => {
-//   await page.goto("http://localhost:3333/simpleScrollTrigger/tests/05/#end");
+test("Initial OnLeave Callback Test (all range at end, not once)", async ({
+  page,
+}) => {
+  await page.goto("http://localhost:3333/simpleScrollTrigger/tests/05/#end");
 
-//   const locator = page.locator(".callbackText");
+  const locator = page.locator(".callbackText");
 
-//   const elementMiddleHandle = await page.$("#middle");
-//   const elementEndHandle = await page.$("#end");
-//   const elementStartHandle = await page.$(".scroll");
+  const locatorMiddle = page.locator("#middle");
+  const locatorEnd = page.locator("#end");
+  const locatorStart = page.locator(".scroll");
 
-//   if (!elementMiddleHandle || !elementEndHandle || !elementStartHandle) {
-//     throw new Error("Element is Null");
-//   }
+  await page.waitForTimeout(200);
+  // onEnterが全域の場合はonLeaveより優先される
+  await expect(locator).toContainText("onEnter");
 
-//   await page.waitForTimeout(500);
-//   // onEnterが全域の場合はonLeaveより優先される
-//   await expect(locator).toContainText("onEnter");
+  await locatorMiddle.evaluate(scrollTo);
+  await expect(locator).toContainText("onEnterBack");
 
-//   await elementMiddleHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onEnterBack");
+  await locatorStart.evaluate(scrollTop);
 
-//   await elementStartHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onLeaveBack");
+  await expect(locator).toContainText("onLeaveBack");
 
-//   await elementMiddleHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onEnter");
-// });
+  await locatorMiddle.evaluate(scrollTo);
+  await expect(locator).toContainText("onEnter");
+});
 
+test("Initial OnLeave Callback Test (end range at end, not once)", async ({
+  page,
+}) => {
+  await page.goto("http://localhost:3333/simpleScrollTrigger/tests/06/#end");
 
-// test("Initial OnLeave Callback Test (end range not once)", async ({ page }) => {
-//   await page.goto("http://localhost:3333/simpleScrollTrigger/tests/06/#end");
+  const locator = page.locator(".callbackText");
 
-//   const locator = page.locator(".callbackText");
+  const locatorMiddle = page.locator("#middle");
+  const locatorEnd = page.locator("#end");
+  const locatorStart = page.locator(".scroll");
 
-//   const elementMiddleHandle = await page.$("#middle");
-//   const elementEndHandle = await page.$("#end");
-//   const elementStartHandle = await page.$(".scroll");
+  await page.waitForTimeout(200);
+  // onEnterのrangeがendの場合はonLeaveになる
+  await expect(locator).toContainText("onLeave");
 
-//   if (!elementMiddleHandle || !elementEndHandle || !elementStartHandle) {
-//     throw new Error("Element is Null");
-//   }
+  await locatorMiddle.evaluate(scrollTo);
+  await expect(locator).toContainText("onEnterBack");
 
-//   await page.waitForTimeout(500);
-//   // onEnterがendの場合はonLeaveになる
-//   await expect(locator).toContainText("onLeave");
+  await locatorStart.evaluate(scrollTop);
 
-//   await elementMiddleHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onEnterBack");
+  await expect(locator).toContainText("onLeaveBack");
 
-//   await elementStartHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onLeaveBack");
+  await locatorMiddle.evaluate(scrollTo);
+  await expect(locator).toContainText("onEnter");
+});
 
-//   await elementMiddleHandle.scrollIntoViewIfNeeded();
-//   await expect(locator).toContainText("onEnter");
-// });
+test("Initial OnLeave Callback Test (end range at end, once)", async ({
+  page,
+}) => {
+  await page.goto("http://localhost:3333/simpleScrollTrigger/tests/07/#end");
+
+  const locator = page.locator(".callbackText");
+
+  const locatorMiddle = page.locator("#middle");
+  const locatorEnd = page.locator("#end");
+  const locatorStart = page.locator(".scroll");
+
+  await page.waitForTimeout(200);
+  // onEnterのrangeがendの場合はonLeaveになる
+  await expect(locator).toContainText("onLeave");
+
+  await locatorMiddle.evaluate(scrollTo);
+  await expect(locator).toContainText("onEnterBack");
+
+  await locatorStart.evaluate(scrollTop);
+
+  await expect(locator).toContainText("onLeaveBack");
+
+  await locatorMiddle.evaluate(scrollTo);
+  await expect(locator).toContainText("onEnter");
+});
+
+test("Initial OnEnter Callback Test (end range at end, not once, not InitOnEnter, not InitOnLeave)", async ({
+  page,
+}, { workerIndex }) => {
+  await page.goto("http://localhost:3333/simpleScrollTrigger/tests/08/#end");
+
+  const locator = page.locator(".callbackText");
+
+  const locatorMiddle = page.locator("#middle");
+  const locatorEnd = page.locator("#end");
+  const locatorStart = page.locator(".scroll");
+
+  await page.waitForTimeout(200);
+  // onEnterがないので初期値---が期待値
+  await expect(locator).toContainText("---");
+
+  await locatorStart.evaluate(scrollTop);
+
+  await expect(locator).toContainText("---");
+
+  await locatorMiddle.evaluate(scrollTo);
+  await expect(locator).toContainText("onEnter");
+
+  await locatorEnd.evaluate(scrollTo);
+  await expect(locator).toContainText("onLeave");
+});
+
+test("Initial OnEnter Callback Test (end range at middle, not once, not InitOnEnter, InitOnLeave)", async ({
+  page,
+}) => {
+  await page.goto("http://localhost:3333/simpleScrollTrigger/tests/09/#middle");
+
+  const locator = page.locator(".callbackText");
+
+  const locatorMiddle = page.locator("#middle");
+  const locatorEnd = page.locator("#end");
+  const locatorStart = page.locator(".scroll");
+
+  await page.waitForTimeout(200);
+  // onEnterがないので初期値---が期待値
+  await expect(locator).toContainText("---");
+
+  await locatorStart.evaluate(scrollTop);
+
+  await expect(locator).toContainText("---");
+
+  await locatorEnd.evaluate(scrollTo);
+  await expect(locator).toContainText("onLeave");
+
+  await locatorMiddle.evaluate(scrollTo);
+  await expect(locator).toContainText("onEnterBack");
+
+  await locatorStart.evaluate(scrollTop);
+
+  await expect(locator).toContainText("onLeaveBack");
+});
+
+test("Initial OnEnter Callback Test (end range at end, not once, not InitOnEnter, InitOnLeave)", async ({
+  page,
+}) => {
+  await page.goto("http://localhost:3333/simpleScrollTrigger/tests/09/#end");
+
+  const locator = page.locator(".callbackText");
+
+  const locatorMiddle = page.locator("#middle");
+  const locatorEnd = page.locator("#end");
+  const locatorStart = page.locator(".scroll");
+
+  await page.waitForTimeout(200);
+  // onEnterがないので初期値---が期待値
+  await expect(locator).toContainText("onLeave");
+
+  await locatorMiddle.evaluate(scrollTo);
+  await expect(locator).toContainText("onEnterBack");
+
+  await locatorStart.evaluate(scrollTop);
+
+  await expect(locator).toContainText("onLeaveBack");
+
+  await locatorEnd.evaluate(scrollTo);
+  await expect(locator).toContainText("onLeave");
+});

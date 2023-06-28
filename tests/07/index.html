@@ -8,10 +8,10 @@
   </head>
   <body>
     <p class="scroll">Scroll　↓</p>
-    <div class="callback">callback: <span class="callbackText" data-testid="callbackText">---</span></div>
+    <div class="callback">callback: <span class="callbackText">---</span></div>
     <div class="spacer"></div>
     <div class="trigger">
-        <div id="middle"></div>
+      <div id="middle"></div>
     </div>
     <div id="end"></div>
     <div class="spacer"></div>
@@ -52,9 +52,9 @@
           startTriggerPoint: { value: 800, unit: "px", from: "bottom" },
           endViewPortPoint: { value: 50, unit: "%", from: "top" },
           endTriggerPoint: { value: 90, unit: "%" },
-          once: false,
-          initOnEnter: true,
-          initOnLeave: false,
+          once: true,
+          initOnEnter: { range: "end" },
+          initOnLeave: true,
         });
       });
     </script>
